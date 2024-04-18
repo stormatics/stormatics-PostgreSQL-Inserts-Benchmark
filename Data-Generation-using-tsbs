@@ -1,0 +1,66 @@
+We are going to use the following table.
+
+CREATE TABLE readings (
+	"time" timestamp with time zone,
+	tags_id integer,
+	latitude double precision,
+	longitude double precision,
+	elevation double precision,
+	velocity double precision,
+	heading double precision,
+	grade double precision,
+	fuel_consumption double precision,
+	additional_tags jsonb
+);
+
+The purpose of this is to create SQL files for our benchmark setup. The table used in above example is sourced from the TSBS (Timescale Benchmark Suite) benchmark, which is available at the following link: https://github.com/timescale/tsbs
+
+Data Generation:
+
+The first step is to generate almost 1 million rows data in a separate file as shown below:
+
+/var/lib/postgresql/tsbs-master/bin/tsbs_generate_data --use-case="iot" --seed=123 --scale=150 --timestamp-start="2024-01-01T00:00:00Z" --timestamp-end="2024-01-02T00:00:00Z" --log-interval="10s" --format="timescaledb" > /mnt/data/timescale-data-scale
+
+Now load this initial dataset inside Local PostgreSQL. 
+
+/var/lib/postgresql/tsbs-master/bin/tsbs_load_timescaledb --host=localhost --port=5432 --db-name=postgres --user=postgres --do-create-db=false --use-hypertable=false --workers=8 --field-index-count=0 --time-index=false --batch-size=20000 --partition-index=false --file=/mnt/data/timescale-data-scale
+
+Note: We are not using any indexes with our dataset.
+To increase the number of rows, make sure to extend the --timestamp-end parameter. For instance, to generate 25 million rows, set --timestamp-end to 2024-01-25T00:00:00Z.
+/var/lib/postgresql/tsbs-master/bin/tsbs_generate_data --use-case="iot" --seed=123 --scale=150 --timestamp-start="2024-01-01T00:00:00Z" --timestamp-end="2024-01-25T00:00:00Z" --log-interval="10s" --format="timescaledb" > /mnt/data/timescale-data-scale
+
+After loading the data, the next step is to create three files using psql and pg_dump options as described below:
+1: CSV based datafile
+Command
+
+psql -c "COPY readings to '/mnt/data/readings.csv' delimiters',' CSV" 
+
+File Output
+
+2024-01-01 00:00:00+00,2539,52.31854,4.72037,124,0,221,0,25,
+2024-01-01 00:00:00+00,736,72.45258,68.83761,255,0,181,0,25,
+2024-01-01 00:00:00+00,3,24.5208,28.09377,428,0,304,0,25,
+
+2: Single Inserts file
+Command
+
+/usr/lib/postgresql/16/bin/pg_dump --inserts --data-only -t readings -b -Fp > /mnt/data/readings_singleinserts.sql 
+
+File Output
+
+INSERT INTO readings VALUES ('2024-01-01 00:00:00+00', 2539, 52.31854, 4.72037, 124, 0, 221, 0, 25, NULL);
+INSERT INTO readings VALUES ('2024-01-01 00:00:00+00', 736, 72.45258, 68.83761, 255, 0, 181, 0, 25, NULL);
+INSERT INTO readings VALUES ('2024-01-01 00:00:00+00', 3, 24.5208, 28.09377, 428, 0, 304, 0, 25, NULL);
+
+3: Batched Inserts file
+Command
+
+/usr/lib/postgresql/16/bin/pg_dump --inserts --data-only -t readings -b -Fp --rows-per-insert=20000 > /mnt/data/readings_batchedinserts.sql 
+File Output
+
+INSERT INTO public.readings VALUES
+    	('2024-01-01 00:00:00+00', 2539, 52.31854, 4.72037, 124, 0, 221, 0, 25, NULL),
+    	('2024-01-01 00:00:00+00', 736, 72.45258, 68.83761, 255, 0, 181, 0, 25, NULL),
+    	('2024-01-01 00:00:00+00', 3, 24.5208, 28.09377, 428, 0, 304, 0, 25, NULL),
+	
+Note: Each batch consists of 20000 rows as defined with --rows-per-insert flag.
