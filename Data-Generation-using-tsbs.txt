@@ -26,6 +26,7 @@ Now load this initial dataset inside Local PostgreSQL.
 /var/lib/postgresql/tsbs-master/bin/tsbs_load_timescaledb --host=localhost --port=5432 --db-name=postgres --user=postgres --do-create-db=false --use-hypertable=false --workers=8 --field-index-count=0 --time-index=false --batch-size=20000 --partition-index=false --file=/mnt/data/timescale-data-scale
 
 Note: We are not using any indexes with our dataset.
+
 To increase the number of rows, make sure to extend the --timestamp-end parameter. For instance, to generate 25 million rows, set --timestamp-end to 2024-01-25T00:00:00Z.
 /var/lib/postgresql/tsbs-master/bin/tsbs_generate_data --use-case="iot" --seed=123 --scale=150 --timestamp-start="2024-01-01T00:00:00Z" --timestamp-end="2024-01-25T00:00:00Z" --log-interval="10s" --format="timescaledb" > /mnt/data/timescale-data-scale
 
