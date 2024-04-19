@@ -26,4 +26,33 @@ Now in order to populate dataset for benchmarking, run the following command:
 
 `psql "postgres://tsdbadmin:redacted@redacted.tsdb.cloud.timescale.com:33098/tsdb?sslmode=require"  -c '\timing' -f /mnt/data/readings_singleinserts.sql`
 
+**Nested Inserts**
 
+Guide for 1 million rows.
+
+Create Staging table and populate the dataset
+
+`CREATE TABLE staging (
+ tags_id integer[],         		 
+ time timestamp with time zone[],
+ latitude double precision[],		 
+ longitude double precision[],		 
+ elevation double precision[],		 
+ velocity double precision[],		 
+ heading double precision[],		 
+ grade double precision[],		 
+ fuel_consumption double precision[]);`
+
+`psql "postgres://tsdbadmin:redacted@redacted.tsdb.cloud.timescale.com:33098/tsdb?sslmode=require"  -c '\timing' -f nested_1mil.sql`
+
+Now insert into the reading tables like this:
+
+Insert into readings select unnest(time),
+                        	 unnest(tags_id),
+                        	 unnest(latitude),
+                        	 unnest(longitude),
+                        	 unnest(elevation),
+                        	 unnest(velocity),
+                        	 unnest(heading),
+                        	 unnest(grade),
+                        	 unnest(fuel_consumption) from staging;
