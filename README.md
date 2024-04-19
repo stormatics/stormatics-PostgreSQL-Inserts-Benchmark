@@ -28,7 +28,7 @@ Now in order to populate dataset for benchmarking, run the following command:
 
 **Nested Inserts**
 
-Guide for 1 million rows.
+Guide for 1 million rows. The dataset is defined inside **data_nested** folder.
 
 Create Staging table and populate the dataset
 
