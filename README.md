@@ -47,7 +47,7 @@ Create Staging table and populate the dataset
 
 Now insert into the reading tables like this:
 
-Insert into readings select unnest(time),
+`Insert into readings select unnest(time),
                         	 unnest(tags_id),
                         	 unnest(latitude),
                         	 unnest(longitude),
@@ -55,4 +55,4 @@ Insert into readings select unnest(time),
                         	 unnest(velocity),
                         	 unnest(heading),
                         	 unnest(grade),
-                        	 unnest(fuel_consumption) from staging;
+                        	 unnest(fuel_consumption) from staging;`
