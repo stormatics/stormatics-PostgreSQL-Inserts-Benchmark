@@ -102,6 +102,7 @@ SELECT
 FROM
     Grouped_rows;
 `
+
 **Generate CSV for column arrays**
 
 `COPY aggregated_readings TO '/tmp/readings_aggregated.csv' WITH (FORMAT CSV, HEADER);`
